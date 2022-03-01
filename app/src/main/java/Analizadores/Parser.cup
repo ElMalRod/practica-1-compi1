@@ -14,6 +14,8 @@ import Herramientas.*;
 /*---------- 2ra Area: Codigo  Parser----------*/
 parser code {:
 
+            private ArrayList<ErrorToken> errorsList = new ArrayList<>();
+            private ArrayList<OperadorReport> operadoresList = new ArrayList<>();
             private Graficador grafica = new Graficador();
             int action = 0;
             private boolean errores=false;
@@ -27,26 +29,26 @@ parser code {:
                 return this.grafica;
             }
 
-
-            public void Report_Error(String message, Object info) {
-                System.out.println("public void report_error");
-            }
-
-            public void syntax_error(Symbol st) {
-                if(st.sym == sym.EOF) {
-                } else {
-                    System.out.println("Error Sintactico en el Texto " + sym.terminalNames[st.sym]);
-                    System.out.println(String.format("En la posicion: %d, %d", st.left, st.right));
+            @Override
+                public void syntax_error(Symbol st) {
+                    Token error = (Token) st.value;
+                    report_error("Error Sintactico con el Token:"+ error.getLexeme()+" este no pertenece a la estructura  >linea: "+error.getLine()+" >columna: "+error.getColumn() + "\n",null);
+                    ErrorToken errorF = new ErrorToken(error.getLexeme(),error.getLine(),error.getColumn(),"","Sintactico");
+                    errorF.siguiente(expected_token_ids());
+                    errorsList.add(errorF);
                 }
-            }
 
-            public void registError(Symbol st, String message) {
-                grafica.addError(st.left, st.right, sym.terminalNames[st.sym].toString(), message, 1);
-            }
-
-             public boolean getErrores(){
-                    return errores;
+                public ArrayList<ErrorToken> getErrorsList(){
+                    return errorsList;
                 }
+
+                public ArrayList<OperadorReport> getOperadoresList(){
+                    return operadoresList;
+                }
+
+
+
+
 
 :};
 

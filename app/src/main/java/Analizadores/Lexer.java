@@ -347,7 +347,7 @@ public class Lexer implements Scanner {
    * @param   in  the java.io.Reader to read input from.
    */
   public Lexer(java.io.Reader in) {
-    ArrayList errorList = new ArrayList();
+      errorList = new ArrayList();
     this.zzReader = in;
   }
 
@@ -749,7 +749,7 @@ public class Lexer implements Scanner {
       else {
         switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
           case 1:
-            { error(yytext()); return new symbol(sym.error,  yyline + 1, yycolumn + 1, yytext());
+            { error(yytext()); return symbol(sym.error,  yyline + 1, yycolumn + 1, yytext());
             }
             // fall through
           case 35: break;
@@ -829,7 +829,7 @@ public class Lexer implements Scanner {
             // fall through
           case 50: break;
           case 17:
-            { return new (sym.LLAVE_C, yyline + 1, yycolumn + 1, yytext());
+            { return new symbol(sym.LLAVE_C, yyline + 1, yycolumn + 1, yytext());
             }
             // fall through
           case 51: break;

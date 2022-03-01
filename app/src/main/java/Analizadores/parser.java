@@ -223,12 +223,14 @@ public class parser extends lr_parser {
 
 
 
+            private ArrayList<ErrorToken> errorsList = new ArrayList<>();
+            private ArrayList<OperadorReport> operadoresList = new ArrayList<>();
             private Graficador grafica = new Graficador();
             int action = 0;
             private boolean errores=false;
 
             /* CONSTRUCTOR */
-            public parser (Lexer lex) {
+            public Parser(Lexer lex) {
                 super(lex);
             }
 
@@ -236,26 +238,26 @@ public class parser extends lr_parser {
                 return this.grafica;
             }
 
-
-            public void Report_Error(String message, Object info) {
-                System.out.println("public void report_error");
-            }
-
-            public void syntax_error(Symbol st) {
-                if(st.sym == sym.EOF) {
-                } else {
-                    System.out.println("Error Sintactico en el Texto " + sym.terminalNames[st.sym]);
-                    System.out.println(String.format("En la posicion: %d, %d", st.left, st.right));
+            @Override
+                public void syntax_error(Symbol st) {
+                    Token error = (Token) st.value;
+                    report_error("Error Sintactico con el Token:"+ error.getLexeme()+" este no pertenece a la estructura  >linea: "+error.getLine()+" >columna: "+error.getColumn() + "\n",null);
+                    ErrorToken errorF = new ErrorToken(error.getLexeme(),error.getLine(),error.getColumn(),"","Sintactico");
+                    errorF.siguiente(expected_token_ids());
+                    errorsList.add(errorF);
                 }
-            }
 
-            public void registError(Symbol st, String message) {
-                grafica.addError(st.left, st.right, sym.terminalNames[st.sym].toString(), message, 1);
-            }
-
-             public boolean getErrores(){
-                    return errores;
+                public ArrayList<ErrorToken> getErrorsList(){
+                    return errorsList;
                 }
+
+                public ArrayList<OperadorReport> getOperadoresList(){
+                    return operadoresList;
+                }
+
+
+
+
 
 
 
@@ -836,14 +838,14 @@ class CUP$parser$actions {
           case 40: // d ::= d MULTI d 
             {
               Integer RESULT =null;
-		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
-		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
-		Integer e1 = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
-		int opleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
-		int opright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
-		Token op = (Token)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
-		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
+		int e1left = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
+		int e1right = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
+		Integer e1 = (Integer)((Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
+		int opleft = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int opright = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Token op = (Token)((Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int e2left = ((Symbol)CUP$parser$stack.peek()).left;
+		int e2right = ((Symbol)CUP$parser$stack.peek()).right;
 		Integer e2 = (Integer)((Symbol) CUP$parser$stack.peek()).value;
 		  RESULT = new Integer(e1.intValue()*e2.intValue());
            operadoresList.add(new OperadorReport("Multiplicacion",op.getLine(),op.getColumn(),e1.toString()+op.getLexeme()+e2.toString()));
@@ -856,15 +858,15 @@ class CUP$parser$actions {
           case 41: // d ::= d DIVISION d 
             {
               Integer RESULT =null;
-		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
-		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
-		Integer e1 = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
-		int opleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
-		int opright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
-		Token op = (Token)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
-		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
-		Integer e2 = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		int e1left = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
+		int e1right = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
+		Integer e1 = (Integer)((Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
+		int opleft = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int opright = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Token op = (Token)((Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int e2left = ((Symbol)CUP$parser$stack.peek()).left;
+		int e2right = ((Symbol)CUP$parser$stack.peek()).right;
+		Integer e2 = (Integer)((Symbol) CUP$parser$stack.peek()).value;
 		  RESULT = new Integer(e1.intValue()/e2.intValue());
            operadoresList.add(new OperadorReport("Division",op.getLine(),op.getColumn(),e1.toString()+op.getLexeme()+e2.toString()));
            
@@ -876,11 +878,11 @@ class CUP$parser$actions {
           case 42: // d ::= ENTERO 
             {
               Integer RESULT =null;
-		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
-		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
-		Token e1 = (Token)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		int e1left = ((Symbol)CUP$parser$stack.peek()).left;
+		int e1right = ((Symbol)CUP$parser$stack.peek()).right;
+		Token e1 = (Token)((Symbol) CUP$parser$stack.peek()).value;
 		  RESULT = new Integer(Integer.parseInt(e1.getLexeme())); /*System.out.printf("Numero: %d\n",RESULT );*/ 
-              CUP$parser$result = parser.getSymbolFactory().newSymbol("d",18, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
+              CUP$parser$result = parser.getSymbolFactory().newSymbol("d",18, ((Symbol)CUP$parser$stack.peek()), ((Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
 
@@ -888,11 +890,11 @@ class CUP$parser$actions {
           case 43: // d ::= PARENTESIS_A d PARENTESIS_C 
             {
               Integer RESULT =null;
-		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
-		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
-		Integer e1 = (Integer)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int e1left = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int e1right = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Integer e1 = (Integer)((Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		 RESULT = e1; /*System.out.printf("Resultado parentesis: %d\n",RESULT );*/ 
-              CUP$parser$result = parser.getSymbolFactory().newSymbol("d",18, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((Symbol)CUP$parser$stack.peek()), RESULT);
+              CUP$parser$result = parser.getSymbolFactory().newSymbol("d",18, ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
 
@@ -900,12 +902,12 @@ class CUP$parser$actions {
           case 44: // d ::= error c 
             {
               Integer RESULT =null;
-		int errleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
-		int errright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
-		Object err = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int errleft = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int errright = ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Object err = (Object)((Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		
                    errores = true; 
-              CUP$parser$result = parser.getSymbolFactory().newSymbol("d",18, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((Symbol)CUP$parser$stack.peek()), RESULT);
+              CUP$parser$result = parser.getSymbolFactory().newSymbol("d",18, ((Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
 
