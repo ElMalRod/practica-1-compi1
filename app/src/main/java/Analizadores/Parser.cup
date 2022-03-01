@@ -1,0 +1,251 @@
+/*---------- 1ra Area: Codigo de Usuarios ----------*/
+package  Analizadores;
+import java.util.ArrayList;
+import java.util.List;
+import java_cup.runtime.*;
+import java_cup.runtime.XMLElement;
+import Analizadores.*;
+import Reportes.*;
+import Objetos.*;
+import Herramientas.*;
+//agregar biblioteca cup como dependencia en android studio
+// https://developer.android.com/studio/projects/android-library?hl=es
+
+/*---------- 2ra Area: Codigo  Parser----------*/
+parser code {:
+
+            private Graficador grafica = new Graficador();
+            int action = 0;
+            private boolean errores=false;
+
+            /* CONSTRUCTOR */
+            public Parser(Lexer lex) {
+                super(lex);
+            }
+
+            public Graficador getGrafica() {
+                return this.grafica;
+            }
+
+
+            public void Report_Error(String message, Object info) {
+                System.out.println("public void report_error");
+            }
+
+            public void syntax_error(Symbol st) {
+                if(st.sym == sym.EOF) {
+                } else {
+                    System.out.println("Error Sintactico en el Texto " + sym.terminalNames[st.sym]);
+                    System.out.println(String.format("En la posicion: %d, %d", st.left, st.right));
+                }
+            }
+
+            public void registError(Symbol st, String message) {
+                grafica.addError(st.left, st.right, sym.terminalNames[st.sym].toString(), message, 1);
+            }
+
+             public boolean getErrores(){
+                    return errores;
+                }
+
+:};
+
+/*---------- Terminals (tokens returned by the scanner).---------- */
+terminal Token	DEF;
+terminal Token	BARRAS;
+terminal Token	PIE;
+terminal Token	TITULO;
+terminal Token	EJEX;
+terminal Token	EJEY;
+terminal Token	ETIQUETAS;
+terminal Token	VALORES;
+terminal Token	UNIR;
+terminal Token  TIPO;
+terminal Token	PORCENTAJE;
+terminal Token  CANTIDAD;
+terminal Token  TOTAL;
+terminal Token  EXTRA;
+terminal Token  EJECUTAR;
+
+terminal Token  COMILLAS;
+terminal Token  CORCHETE_A;
+terminal Token  CORCHETE_C;
+terminal Token  LLAVE_A;
+terminal Token  LLAVE_C;
+terminal Token  PARENTESIS_A;
+terminal Token  PARENTESIS_C;
+terminal Token  DOSPUNTOS;
+terminal Token  PUNTOCOMA;
+
+terminal Token	SUMA;
+terminal Token	RESTA;
+terminal Token  MULTI;
+terminal Token  DIVISION;
+terminal Token  ENTERO;
+terminal Token  COMA;
+
+/*----------- Non-Terminals (created scanner). ----------*/
+non terminal  inicio,def,titulo,ejex,ejey,unir,tipo,etiqueta,valor,total,extra,ejecutar,corchete,nums,items,llave,grafica_barras,grafica_pie;
+non terminal Integer d,c;
+precedence left SUMA, RESTA;
+precedence left MULTI, DIVISION;
+
+/* ----------The grammar :---------- */
+
+start with inicio;
+
+    inicio ::=  def| grafica_barras
+            | grafica_pie | ejecutar
+           ;
+
+    def ::= DEF  BARRAS LLAVE_A  grafica_barras titulo: titulos  {: grafica.registTitulo(st.left,st.right,titulos.toString(), 0); :}
+                 unir : tmp
+         {:
+             grafica.registUnir(st.left, st.right, (ArrayList<short[]>)tmp, 0);
+         :}
+         LLAVE_C
+            {:
+                grafica.guardarBarras();
+            :}
+          | DEF  PIE LLAVE_A  grafica_pie titulo: titulos    {: grafica.registTitulo(st.left,st.right,titulos.toString(), 1); :}
+                 unir: tmp
+              {: grafica.registUnir(st.left, st.right, (ArrayList<short[]>)tmp, 1); :}
+          LLAVE_C
+            {:
+                grafica.guardarPie();
+            :}
+             ;
+
+   grafica_barras ::= ejex | ejey
+    ;
+    grafica_pie ::= tipo | etiqueta |valor |total |extra
+    ;
+
+    titulo ::= TITULO DOSPUNTOS COMILLAS: titulos PUNTOCOMA
+            {:
+                System.out.println("TITULO\n");
+                RESULT= titulos.toSting();
+
+             :}
+             ;
+     ejex::= EJEX DOSPUNTOS CORCHETE_A items: ejex1 CORCHETE_C PUNTOCOMA
+             {:
+                  System.out.println("EJEX \n");
+                  grafica.registEjex(st.left, st.right, ejex1.toString());
+
+             :}
+             ;
+     ejey::= EJEY DOSPUNTOS  CORCHETE_A nums:ejey1 CORCHETE_C PUNTOCOMA
+                  {:
+                       grafica.registEjey(st.left, st.right, ejey1.toString());
+
+                   :}
+                   ;
+     unir::= UNIR DOSPUNTOS LLAVE_A corchete:items LLAVE_C DOSPUNTOS
+                {:
+                          System.out.println("UNIR  %s \n");
+                          RESULT = (ArrayList<short[]>)items;
+
+                 :}
+                 ;
+     tipo::=  TIPO DOSPUNTOS PORCENTAJE PUNTOCOMA
+                {:
+                     System.out.println("tTIPO\n");
+                    grafica.registTipo(st.left, st.right, 0);
+                  :}
+            | TIPO DOSPUNTOS CANTIDAD PUNTOCOMA
+            {:
+                 System.out.println("tTIPO\n");
+                 grafica.registTipo(st.left, st.right, 1);
+           :}
+                  ;
+     etiqueta::= ETIQUETAS DOSPUNTOS CORCHETE_A items: name CORCHETE_C PUNTOCOMA
+                {:
+                     System.out.println("ETIQUETAS\n");
+                     grafica.registEtiqueta(st.left, st.right, name.toString());
+                  :}
+                  ;
+      valor::= VALORES DOSPUNTOS CORCHETE_A nums: numero CORCHETE_C PUNTOCOMA
+                 {:
+                        System.out.println("VALOR\n");
+                        grafica.registValores(st.left, st.right, numero.toString());
+
+                   :}
+                   ;
+      total::=  TOTAL DOSPUNTOS: num PUNTOCOMA
+        {:
+                 System.out.println("TOTAL\n");
+                 grafica.registTotal(st.left, st.right, Double.valueOf(num.toString()));
+
+         :}
+          ;
+       extra::= EXTRA DOSPUNTOS COMILLAS: extras PUNTOCOMA
+            {:
+              System.out.println("EXTRA\n");
+               grafica.regisExtra(st.left, st.right, extras.toString().substring(1, extras.toString().length() - 1));
+              ;
+            :}
+             ;
+       items::= COMILLAS : item1 {:RESULT = item1.toString().substring(1,item1.toString().length() - 1); :}
+       | items: item2 COMA COMILLAS : item1
+       {:
+            String item = item1.toString().substring(1,item1.toString().length() - 1);
+            String items = item + "\n" + item2;
+            RESULT = items;
+        :}
+       ;
+
+       nums::= c: num1   {: RESULT = Double.valueOf(num1.toString()); :}
+       | c: num2 COMA c: num1
+        {:
+            String item = num1.toString();
+            String items = item + "\n" + num2;
+            RESULT = items;
+        :}
+         ;
+         corchete ::=  corchete:num1 COMA llave:num2
+         {:
+             ArrayList<short[]> Actual = (ArrayList<short[]>) num2;
+             ArrayList<short[]> Nums = new ArrayList<>();
+             Nums.addAll(Actual);
+             Nums.addAll((ArrayList<short[]>) num1);
+              RESULT = values;
+         :}
+          | llave:val
+          {:
+            RESULT =  val;
+          :}
+          ;
+
+           llave ::=   LLAVE_A c:valX COMA c:valY LLAVE_C
+           {:
+             short[] tmp = new short[]{Short.valueOf(valX.toString()), Short.valueOf(valY.toString())};
+              ArrayList<short[]> array = new ArrayList<>();
+              array.add(tmp);
+              RESULT = array;
+           :}
+            ;
+       ejecutar::= EJECUTAR DOSPUNTOS PARENTESIS_A COMILLAS PARENTESIS_C PUNTOCOMA;
+
+       c ::= d:resultado {: RESULT = resultado; /*System.out.printf("Resultado FINAL: %d \n",resultado);*/ :}
+           | error:err {:
+                   errores = true; :}
+       ;
+       d ::= d:e1 SUMA:op d:e2 {:   RESULT = new Integer(e1.intValue()+e2.intValue());
+           operadoresList.add(new OperadorReport("Suma",op.getLine(),op.getColumn(),e1.toString()+op.getLexeme()+e2.toString()));
+           :}
+           | d:e1 RESTA:op d:e2 {:
+           RESULT = new Integer(e1.intValue()-e2.intValue());
+           operadoresList.add(new OperadorReport("Resta",op.getLine(),op.getColumn(),e1.toString()+op.getLexeme()+e2.toString()));
+           :}
+           | d:e1 MULTI:op d:e2 {:  RESULT = new Integer(e1.intValue()*e2.intValue());
+           operadoresList.add(new OperadorReport("Multiplicacion",op.getLine(),op.getColumn(),e1.toString()+op.getLexeme()+e2.toString()));
+           :}
+           | d:e1 DIVISION:op d:e2 {:  RESULT = new Integer(e1.intValue()/e2.intValue());
+           operadoresList.add(new OperadorReport("Division",op.getLine(),op.getColumn(),e1.toString()+op.getLexeme()+e2.toString()));
+           :}
+           | ENTERO:e1 {:  RESULT = new Integer(Integer.parseInt(e1.getLexeme())); /*System.out.printf("Numero: %d\n",RESULT );*/ :}
+           | PARENTESIS_A d:e1 PARENTESIS_C {: RESULT = e1; /*System.out.printf("Resultado parentesis: %d\n",RESULT );*/ :}
+           | error:err c {:
+                   errores = true; :}
+       ;
